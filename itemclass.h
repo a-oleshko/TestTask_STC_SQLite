@@ -20,6 +20,7 @@ public:
     bool m_canCompile{false};
 
 public:
+    explicit EditorItemClass(QObject *parent = nullptr);
     explicit EditorItemClass(const QString &refSerializedData,
                              QObject *parent = nullptr);
     EditorItemClass(const EditorItemClass &other, QObject *parent = nullptr):QObject{parent}
@@ -34,7 +35,7 @@ public:
 
     //example: "Notepad++;txt,xml,cpp;utf,ansi;true;true;false"
     QString toString() const;
-    void fromString(const QString &refSerializedData, const QString &refSeparator = ";");
+    void fromString(const QString &refSerializedData, const QString &refSeparator = ":");
 
     EditorItemClass& operator=(const EditorItemClass &other)
     {

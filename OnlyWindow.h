@@ -8,8 +8,14 @@
 
 #include "model_editortable.h"
 
+#include "delegateeditablerow.h"
+
 #include "broker_sqlite.h"
 #include "broker_xml.h"
+
+#define COL_HAS_INTELLISENSE 3
+#define COL_HAS_PLUGINS 4
+#define COL_CAN_COMPILE 5
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class OnlyWindow; }
@@ -29,6 +35,8 @@ private:
     QMenu *m_objMenu{nullptr};
     QModelIndex selectedIndex;
 
+    DelegateEditableRow *delegateEditable{nullptr};
+    int m_editableRow{-1};
 public:
     OnlyWindow(QWidget *parent = nullptr);
     OnlyWindow(Model_EditorTable *ptrModel, BrokerXmlClass* ptrXmlBroker, BrokerSqliteClass *ptrSqliteBroker, QWidget *parent = nullptr);
@@ -41,10 +49,13 @@ protected:
 protected slots:
     void slotCustomMenuRequested(QPoint);
     void slotDeleteItem();
+    void slotExportItem();
+    void slotEditItem();
 
 signals:
     void signalDeleteItem(int rowNumber);
-
+    void signalExportItem(int rowNumber, const QString &refFilename);
+    void signalEditItem(int rowNumber);
 private:
     Ui::OnlyWindow *ui;
 };

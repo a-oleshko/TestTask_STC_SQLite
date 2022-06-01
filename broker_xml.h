@@ -20,7 +20,7 @@ class BrokerXmlClass : public QObject
 private:
     QString m_selectedDir;
     QStringList m_listOfFiles;
-    QString m_lastErrorMessage;
+    QString m_importReportMessage;
 
 public:
     BrokerXmlClass();
@@ -32,14 +32,16 @@ protected:
     QString getSerializedDataFromXmlFile(const QString &refFilename) const;
 
     //export
+    QDomDocument generateXmlFile(const QString &refSerializedData) const;
 
 
     //report
+    void prepareReport(int totalNumberOfFiles, int problemCounter);
     void processErrorMessage(const QString &refFilename, const QString &refErrorDetails);
 
 public slots:
     void slotSelectAndProcessDir(const QString &refDirpath);
-    void slotExportEditorItem(const QString &refSerializedData);
+    void slotExportItemToXml(const QString &refSerializedData, const QString &refFilename);
 
 signals:
     //model signals

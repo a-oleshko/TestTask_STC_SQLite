@@ -21,6 +21,8 @@ private:
 
     QList<EditorItemClass> m_dataContainer;
 
+    int m_editableRow{-1}; //-1 no row can be edited
+
 public:
     explicit Model_EditorTable(const QString &dbName);
 
@@ -47,13 +49,14 @@ public:
 public slots:
     void slotImportItem(const QString &refSerializedItem);
     void slotDeleteItem(int rowNumber);
-    void slotExportItem(int rowNumber);
+    void slotExportItem(int rowNumber, const QString &refFilename);
+    void slotEditItem(int rowNumber);
     void slotClearModel();
 
     void slotDumpToSqlite();
 
 signals:
-    void signalExportItem(const QString &refSerializedItem) const; //to xml_broker
+    void signalExportItem(const QString &refSerializedItem, const QString &refFilename) const; //to xml_broker
 };
 
 #endif // MODEL_EDITORTABLE_H

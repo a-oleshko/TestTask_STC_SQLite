@@ -11,6 +11,7 @@ CONFIG += c++17
 SOURCES += \
     broker_sqlite.cpp \
     broker_xml.cpp \
+    delegateeditablerow.cpp \
     itemclass.cpp \
     main.cpp \
     OnlyWindow.cpp \
@@ -21,6 +22,7 @@ HEADERS += \
     OnlyWindow.h \
     broker_sqlite.h \
     broker_xml.h \
+    delegateeditablerow.h \
     itemclass.h \
     model_editortable.h \
     windowimportxml.h

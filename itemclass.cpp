@@ -1,8 +1,13 @@
 #include "itemclass.h"
 
+EditorItemClass::EditorItemClass(QObject *parent): QObject{parent}
+{
+
+}
+
 EditorItemClass::EditorItemClass(const QString &refSerializedData,
                      QObject *parent)
-    : QObject{parent}
+    : EditorItemClass{parent}
 {
     try
     {
@@ -17,9 +22,9 @@ EditorItemClass::EditorItemClass(const QString &refSerializedData,
 QString EditorItemClass::toString() const
 {
     QString retString;
-    retString.append(m_textEditor).append(";").append(m_fileFormats).append(";")
-            .append(m_encoding).append(";").append(m_hasIntellisense?"true":"false").append(";")
-            .append(m_hasPlugins?"true":"false").append(";").append(m_canCompile?"true":"false");
+    retString.append(m_textEditor).append(":").append(m_fileFormats).append(":")
+            .append(m_encoding).append(":").append(m_hasIntellisense?"true":"false").append(":")
+            .append(m_hasPlugins?"true":"false").append(":").append(m_canCompile?"true":"false");
     return retString;
 
 }

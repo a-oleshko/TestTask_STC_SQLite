@@ -66,32 +66,49 @@ QVariant Model_EditorTable::headerData(int section, Qt::Orientation orientation,
 
 bool Model_EditorTable::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (role == Qt::EditRole) {
+    if (role == Qt::EditRole && index.row() == m_editableRow)
+    {
+
         if (!checkIndex(index))
+        {
             return false;
+        }
+        if(value.toString().isEmpty() || value.toString().contains(":"))
+        {
+            return false;
+        }
         switch(index.column())
         {
-        //        case 0:
-        //            m_dataContainer.value(index.row()).m_textEditor = value.toString();
-        //        case 1:
-        //            m_dataContainer.value(index.row()).m_fileFormats = value.toString();
-        //        case 2:
-        //            m_dataContainer.value(index.row()).m_encoding = value.toString();
-        //        case 3:
-        //            m_dataContainer.value(index.row()).m_hasIntellisense = true;
-        //        case 4:
-        //            m_dataContainer.value(index.row()).m_hasPlugins = value.toString();
-        //        case 5:
-        //            m_dataContainer.value(index.row()).m_canCompile = value.toString();
+        case 0:
+            (m_dataContainer.data()+index.row())->m_textEditor = value.toString();
+            break;
+        case 1:
+            (m_dataContainer.data()+index.row())->m_fileFormats = value.toString();
+            break;
+        case 2:
+            (m_dataContainer.data()+index.row())->m_encoding = value.toString();
+            break;
+        case 3:
+            (m_dataContainer.data()+index.row())->m_hasIntellisense = value.toBool();
+            break;
+        case 4:
+            (m_dataContainer.data()+index.row())->m_hasPlugins = value.toBool();
+            break;
+        case 5:
+            (m_dataContainer.data()+index.row())->m_canCompile = value.toBool();
+            break;
         }
+        emit dataChanged(index, index, {role});
         return true;
     }
     return false;
 }
 
 Qt::ItemFlags Model_EditorTable::flags(const QModelIndex &index) const
-{
-    return Qt::ItemIsEditable | QAbstractTableModel::flags(index);
+{    
+    if (!index.isValid())
+        return Qt::ItemIsEnabled;
+    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 }
 
 bool Model_EditorTable::insertRows(int position, int rows, const QModelIndex &parent)
@@ -139,12 +156,17 @@ void Model_EditorTable::slotDeleteItem(int rowNumber)
     }
 }
 
-void Model_EditorTable::slotExportItem(int rowNumber)
+void Model_EditorTable::slotExportItem(int rowNumber, const QString &refFilename)
 {
     if(rowNumber>-1 && rowNumber<m_dataContainer.size())
     {
-        emit signalExportItem(m_dataContainer.at(rowNumber).toString());
+        emit signalExportItem(m_dataContainer.at(rowNumber).toString(), refFilename);
     }
+}
+
+void Model_EditorTable::slotEditItem(int rowNumber)
+{
+    m_editableRow = rowNumber;
 }
 
 void Model_EditorTable::slotClearModel()

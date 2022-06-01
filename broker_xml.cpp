@@ -7,7 +7,6 @@ BrokerXmlClass::BrokerXmlClass()
 void BrokerXmlClass::prepareFileList()
 {
     m_listOfFiles.clear();
-    QStringList strlistFilename;
     QDir parsedPath(m_selectedDir);
     if(parsedPath.exists())
     {
@@ -18,8 +17,8 @@ void BrokerXmlClass::prepareFileList()
 
 void BrokerXmlClass::processFiles()
 {
-    int fileCounter{1}, problemsCounter{0};
-    m_lastErrorMessage.clear();
+    int fileCounter{0}, problemsCounter{0};
+    m_importReportMessage.clear();
     for(auto &item : m_listOfFiles)
     {
         QString serializedResult;
@@ -39,18 +38,12 @@ void BrokerXmlClass::processFiles()
             problemsCounter++;
             processErrorMessage(item, exception.what());
         }
-        emit signalCurrentProgress(fileCounter);
         fileCounter++;
+        emit signalCurrentProgress(fileCounter);
         //_sleep(3000);//NOTE: just to check multithreading
     }
-    if(problemsCounter>0)
-    {
-        emit signalSendReport(m_lastErrorMessage);
-    }
-    else
-    {
-        emit signalSendReport("Все файлы успешно импортированы.");
-    }
+    prepareReport(fileCounter, problemsCounter);
+    emit signalSendReport(m_importReportMessage);
 }
 
 QString BrokerXmlClass::getSerializedDataFromXmlFile(const QString &refFilename) const
@@ -112,15 +105,42 @@ QString BrokerXmlClass::getSerializedDataFromXmlFile(const QString &refFilename)
         throw "nofile"; //error openning file
     }
 
-    resultString.append(textEditor).append(";").append(fileFormats).append(";").append(encoding).append(";").
-            append(hasintellisens).append(";").append(hasplugins).append(";").append(cancompile);
+    resultString.append(textEditor).append(":").append(fileFormats).append(":").append(encoding).append(":").
+            append(hasintellisens).append(":").append(hasplugins).append(":").append(cancompile);
     return resultString;
+}
+
+void BrokerXmlClass::prepareReport(int totalNumOfFiles, int problemCounter)
+{
+    if(problemCounter < 1)
+    {
+        QString fullSuccessString{"Успешно импортировано: %1 файл(-а/ов) из %1."};
+        m_importReportMessage.append(fullSuccessString.arg(totalNumOfFiles));
+    }
+    else if(totalNumOfFiles == problemCounter)
+    {
+        //full fail
+        QString fullFailString{"Импортировано с ошибками: %1 файл(-а/ов) из %1\n"
+                               "Перечень файлов с ошибками:\n"};
+        m_importReportMessage.prepend(fullFailString.arg(totalNumOfFiles));
+    }
+    else
+    {
+        QString partialSuccessString{"Всего файлов: %1.\n"
+                                     "Из них успешно: %2.\n"
+                                     "С ошибками: %3.\n"
+                                     "Перечень файлов с ошибками:\n"};
+        int successCount = totalNumOfFiles - problemCounter;
+        m_importReportMessage.prepend(partialSuccessString.arg(totalNumOfFiles).
+                                      arg(successCount).
+                                      arg(problemCounter));
+    }
 }
 
 void BrokerXmlClass::processErrorMessage(const QString &refFilename, const QString &refErrorDetails)
 {
-    QString fileReport{"Файл: %1 \nПроблема: %2 \n\n"};
-    m_lastErrorMessage.append(fileReport.arg(refFilename, refErrorDetails));
+    QString fileReport{"\nФайл: %1 \nПроблема: %2\n"};
+    m_importReportMessage.append(fileReport.arg(refFilename, refErrorDetails));
 }
 
 void BrokerXmlClass::slotSelectAndProcessDir(const QString &refDirpath)
@@ -130,7 +150,62 @@ void BrokerXmlClass::slotSelectAndProcessDir(const QString &refDirpath)
     processFiles();
 }
 
-void BrokerXmlClass::slotExportEditorItem(const QString &refSerializedData)
+void BrokerXmlClass::slotExportItemToXml(const QString &refSerializedData, const QString &refFilename) //add full address of created file.
 {
-    qDebug()<<__PRETTY_FUNCTION__<<"try to export"<<refSerializedData;
+    qDebug()<<__PRETTY_FUNCTION__<<"try to export"<<refSerializedData<<"to file:"<<refFilename;
+
+    if(refFilename.isEmpty())
+    {
+        return;
+    }
+    QFile xmlExportFile(refFilename);
+    if (xmlExportFile.open(QIODevice::WriteOnly))
+    {
+        QTextStream(&xmlExportFile)<<generateXmlFile(refSerializedData).toString();
+        xmlExportFile.close();
+    }
+}
+
+QDomDocument BrokerXmlClass::generateXmlFile(const QString &refSerializedData) const
+{
+    QDomDocument exportXmlDoc;
+    QString data("version=\"1.0\" encoding=ASCII");
+    QDomProcessingInstruction instr = exportXmlDoc.createProcessingInstruction("xml", data);
+    exportXmlDoc.appendChild(instr);
+    QDomElement domCoreElement = exportXmlDoc.createElement("root");
+    exportXmlDoc.appendChild(domCoreElement);
+    QStringList dataList = refSerializedData.split(":");
+    size_t counter{0};
+
+    for(auto &item : dataList)
+    {
+        QDomElement nodeBuffer;
+        switch(counter)
+        {
+        case 0:
+            nodeBuffer = exportXmlDoc.createElement("texteditor");
+            break;
+        case 1:
+            nodeBuffer = exportXmlDoc.createElement("fileformats");
+            break;
+        case 2:
+            nodeBuffer = exportXmlDoc.createElement("encoding");
+            break;
+        case 3:
+            nodeBuffer = exportXmlDoc.createElement("hasintellisense");
+            break;
+        case 4:
+            nodeBuffer = exportXmlDoc.createElement("hasplugins");
+            break;
+        case 5:
+            nodeBuffer = exportXmlDoc.createElement("cancompile");
+            break;
+        }
+        domCoreElement.appendChild(nodeBuffer);
+        QDomText textElement = exportXmlDoc.createTextNode(item);
+        nodeBuffer.appendChild(textElement);
+        ++counter;
+    }
+
+    return exportXmlDoc;
 }
