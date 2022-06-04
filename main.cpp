@@ -14,22 +14,40 @@ int main(int argc, char *argv[])
 
     //sql-broker
     QThread threadSqlBroker;
-    BrokerSqliteClass brokerSqlite;
+    BrokerSqliteClass brokerSqlite{"dbfile.sqlite"};
     brokerSqlite.moveToThread(&threadSqlBroker);
-    threadSqlBroker.start(QThread::LowestPriority);
+    QObject::connect(&threadSqlBroker, SIGNAL(started()),
+                      &brokerSqlite, SLOT(slotInitDB()));
 
     //xml broker
     QThread threadXmlBroker;
     BrokerXmlClass brokerXml;
     brokerXml.moveToThread(&threadXmlBroker);
-    threadXmlBroker.start(QThread::LowPriority);
 
-    Model_EditorTable dataModel{"none"};
+    ModelTableEditors dataModel{"none"};
     QObject::connect(&brokerXml, SIGNAL(signalSerializedData(const QString &)),
                      &dataModel, SLOT(slotImportItem(const QString &)));
 
-    OnlyWindow mainWindow(&dataModel, &brokerXml, &brokerSqlite);
+    QObject::connect(&brokerSqlite, SIGNAL(signalSerializedData(const QString &)),
+                     &dataModel, SLOT(slotImportItem(const QString &)));
+    QObject::connect(&dataModel, SIGNAL(signalExportItemSqlite(const QString &)),
+                     &brokerSqlite, SLOT(slotCreateSqliteRecord(const QString &)));
+    QObject::connect(&dataModel, SIGNAL(signalDeleteItemSqlite(const QString &)),
+                     &brokerSqlite, SLOT(slotDeleteSqliteRecord(const QString &)));
+    QObject::connect(&dataModel, SIGNAL(signalUpdateItemSqlite(const QString &)),
+                     &brokerSqlite, SLOT(slotUpdateSqliteRecord(const QString &)));
+    QObject::connect(&dataModel, SIGNAL(signalClearTableSqlite()),
+                     &brokerSqlite, SLOT(slotClearSqliteRecords()));
 
+
+
+
+    //connect signals and slots model and sql
+
+    threadSqlBroker.start(QThread::LowestPriority);
+    threadXmlBroker.start(QThread::LowPriority);
+
+    OnlyWindow mainWindow(&dataModel, &brokerXml, &brokerSqlite);
 
     QObject::connect(&mainWindow, SIGNAL(destroyed()),
                      &threadSqlBroker, SLOT(terminate()));

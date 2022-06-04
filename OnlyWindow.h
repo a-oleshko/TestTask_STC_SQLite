@@ -27,7 +27,7 @@ class OnlyWindow : public QMainWindow
 private:
     BrokerXmlClass *m_ptrXmlBroker{nullptr};
     BrokerSqliteClass *m_ptrSqliteBroker{nullptr};
-    Model_EditorTable *m_ptrModelData{nullptr};
+    ModelTableEditors *m_ptrModelData{nullptr};
 
     QFileDialog fileDirSelectDlg;
     windowImportXml xmlImportDlg;
@@ -39,7 +39,7 @@ private:
     int m_editableRow{-1};
 public:
     OnlyWindow(QWidget *parent = nullptr);
-    OnlyWindow(Model_EditorTable *ptrModel, BrokerXmlClass* ptrXmlBroker, BrokerSqliteClass *ptrSqliteBroker, QWidget *parent = nullptr);
+    OnlyWindow(ModelTableEditors *ptrModel, BrokerXmlClass* ptrXmlBroker, BrokerSqliteClass *ptrSqliteBroker, QWidget *parent = nullptr);
     ~OnlyWindow();
 
 protected:
