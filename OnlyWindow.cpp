@@ -9,7 +9,7 @@ OnlyWindow::OnlyWindow(QWidget *parent)
     ui->setupUi(this);
 }
 
-OnlyWindow::OnlyWindow(Model_EditorTable *ptrModel, BrokerXmlClass* ptrXmlBroker, BrokerSqliteClass *ptrSqliteBroker,
+OnlyWindow::OnlyWindow(ModelTableEditors *ptrModel, BrokerXmlClass* ptrXmlBroker, BrokerSqliteClass *ptrSqliteBroker,
                        QWidget *parent):OnlyWindow(parent)
 {
     m_ptrModelData = ptrModel;

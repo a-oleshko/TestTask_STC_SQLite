@@ -26,7 +26,6 @@ QString EditorItemClass::toString() const
             .append(m_encoding).append(":").append(m_hasIntellisense?"true":"false").append(":")
             .append(m_hasPlugins?"true":"false").append(":").append(m_canCompile?"true":"false");
     return retString;
-
 }
 
 void EditorItemClass::fromString(const QString &refSerializedData,

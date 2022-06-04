@@ -11,7 +11,7 @@
 
 #include "itemclass.h"
 
-class Model_EditorTable : public QAbstractTableModel
+class ModelTableEditors : public QAbstractTableModel
 {
     Q_OBJECT
 
@@ -24,7 +24,7 @@ private:
     int m_editableRow{-1}; //-1 no row can be edited
 
 public:
-    explicit Model_EditorTable(const QString &dbName);
+    explicit ModelTableEditors(const QString &dbName);
 
     //CRUD item
     //add idem
@@ -56,7 +56,13 @@ public slots:
     void slotDumpToSqlite();
 
 signals:
-    void signalExportItem(const QString &refSerializedItem, const QString &refFilename) const; //to xml_broker
+    //to xml_broker
+    void signalExportItem(const QString &refSerializedItem, const QString &refFilename);
+    //to sqlite
+    void signalExportItemSqlite(const QString &refSerializedItem);
+    void signalDeleteItemSqlite(const QString &refEditorName);
+    void signalUpdateItemSqlite(const QString &refSerializedItem);
+    void signalClearTableSqlite();
 };
 
 #endif // MODEL_EDITORTABLE_H

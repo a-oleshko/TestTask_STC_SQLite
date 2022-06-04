@@ -33,7 +33,7 @@ public:
         m_canCompile = other.m_canCompile;
     }
 
-    //example: "Notepad++;txt,xml,cpp;utf,ansi;true;true;false"
+    //example: "Notepad++:txt;xml;cpp:utf;ansi:true:true:false"
     QString toString() const;
     void fromString(const QString &refSerializedData, const QString &refSeparator = ":");
 
@@ -46,6 +46,11 @@ public:
         m_hasPlugins = other.m_hasPlugins;
         m_canCompile = other.m_canCompile;
         return *this;
+    }
+
+    bool operator==(const EditorItemClass &other) const
+    {
+        return m_textEditor==other.m_textEditor;
     }
 signals:
 

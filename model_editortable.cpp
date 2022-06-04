@@ -1,6 +1,6 @@
 #include "model_editortable.h"
 
-Model_EditorTable::Model_EditorTable(const QString &dbName)
+ModelTableEditors::ModelTableEditors(const QString &dbName)
 {
     if(!dbName.isEmpty())
     {
@@ -8,17 +8,17 @@ Model_EditorTable::Model_EditorTable(const QString &dbName)
     }
 }
 
-int Model_EditorTable::rowCount(const QModelIndex &parent) const
+int ModelTableEditors::rowCount(const QModelIndex &parent) const
 {
     return m_dataContainer.size();
 }
 
-int Model_EditorTable::columnCount(const QModelIndex &parent) const
+int ModelTableEditors::columnCount(const QModelIndex &parent) const
 {
     return NUM_OF_COLUMNS;
 }
 
-QVariant Model_EditorTable::data(const QModelIndex &index, int role) const
+QVariant ModelTableEditors::data(const QModelIndex &index, int role) const
 {
     int col = index.column();
     int row = index.row();
@@ -43,7 +43,7 @@ QVariant Model_EditorTable::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-QVariant Model_EditorTable::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant ModelTableEditors::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
         switch (section) {
@@ -64,11 +64,10 @@ QVariant Model_EditorTable::headerData(int section, Qt::Orientation orientation,
     return QVariant();
 }
 
-bool Model_EditorTable::setData(const QModelIndex &index, const QVariant &value, int role)
+bool ModelTableEditors::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (role == Qt::EditRole && index.row() == m_editableRow)
     {
-
         if (!checkIndex(index))
         {
             return false;
@@ -98,20 +97,21 @@ bool Model_EditorTable::setData(const QModelIndex &index, const QVariant &value,
             (m_dataContainer.data()+index.row())->m_canCompile = value.toBool();
             break;
         }
+        emit signalUpdateItemSqlite(m_dataContainer.at(index.row()).toString());
         emit dataChanged(index, index, {role});
         return true;
     }
     return false;
 }
 
-Qt::ItemFlags Model_EditorTable::flags(const QModelIndex &index) const
+Qt::ItemFlags ModelTableEditors::flags(const QModelIndex &index) const
 {    
     if (!index.isValid())
         return Qt::ItemIsEnabled;
     return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 }
 
-bool Model_EditorTable::insertRows(int position, int rows, const QModelIndex &parent)
+bool ModelTableEditors::insertRows(int position, int rows, const QModelIndex &parent)
 {
     beginInsertRows(QModelIndex(), position, position+rows-1);
 
@@ -119,7 +119,7 @@ bool Model_EditorTable::insertRows(int position, int rows, const QModelIndex &pa
     return true;
 }
 
-bool Model_EditorTable::removeRows(int position, int rows, const QModelIndex &parent)
+bool ModelTableEditors::removeRows(int position, int rows, const QModelIndex &parent)
 {
     beginRemoveRows(QModelIndex(), position, position+rows-1);
 
@@ -128,18 +128,26 @@ bool Model_EditorTable::removeRows(int position, int rows, const QModelIndex &pa
 }
 
 
-void Model_EditorTable::loadData()
+void ModelTableEditors::loadData()
 {
 
 }
 
-void Model_EditorTable::slotImportItem(const QString &refSerializedItem)
+void ModelTableEditors::slotImportItem(const QString &refSerializedItem)
 {
     try
     {
         EditorItemClass newItem(refSerializedItem);
-        insertRows(m_dataContainer.size(), 1);
-        m_dataContainer<<newItem;
+
+        if(!m_dataContainer.contains(newItem))
+        {
+            insertRows(m_dataContainer.size(), 1);
+            m_dataContainer<<newItem;
+            if(sender()->objectName() != "SQLITE")
+            {
+                emit signalExportItemSqlite(newItem.toString());
+            }
+        }
     }
     catch(int errNo)
     {
@@ -147,16 +155,17 @@ void Model_EditorTable::slotImportItem(const QString &refSerializedItem)
     }
 }
 
-void Model_EditorTable::slotDeleteItem(int rowNumber)
+void ModelTableEditors::slotDeleteItem(int rowNumber)
 {
     if(rowNumber>-1 && rowNumber<m_dataContainer.size())
     {
         removeRows(rowNumber, 1);
+        emit signalDeleteItemSqlite(m_dataContainer.at(rowNumber).m_textEditor);
         m_dataContainer.remove(rowNumber,1);
     }
 }
 
-void Model_EditorTable::slotExportItem(int rowNumber, const QString &refFilename)
+void ModelTableEditors::slotExportItem(int rowNumber, const QString &refFilename)
 {
     if(rowNumber>-1 && rowNumber<m_dataContainer.size())
     {
@@ -164,18 +173,19 @@ void Model_EditorTable::slotExportItem(int rowNumber, const QString &refFilename
     }
 }
 
-void Model_EditorTable::slotEditItem(int rowNumber)
+void ModelTableEditors::slotEditItem(int rowNumber)
 {
     m_editableRow = rowNumber;
 }
 
-void Model_EditorTable::slotClearModel()
+void ModelTableEditors::slotClearModel()
 {
     removeRows(0, m_dataContainer.size());
     m_dataContainer.clear();
+    emit signalClearTableSqlite();
 }
 
-void Model_EditorTable::slotDumpToSqlite()
+void ModelTableEditors::slotDumpToSqlite()
 {
 
 }
